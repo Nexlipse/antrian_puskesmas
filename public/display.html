@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Display Antrian</title>
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #0b1e4b; color: #fff; height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
+  header { padding: 20px 32px; background: #0e2a6b; display: flex; justify-content: space-between; }
+  h1 { font-size: 1.4rem; }
+  #clock { font-size: 1.4rem; color: #93c5fd; }
+  .now { text-align: center; align-self: center; }
+  .now .label { font-size: 1.2rem; color: #93c5fd; letter-spacing: 4px; }
+  #number { font-size: clamp(6rem, 22vw, 16rem); font-weight: 900; line-height: 1; text-shadow: 0 4px 30px rgba(59,130,246,.6); }
+  #loket { font-size: 2rem; color: #fbbf24; font-weight: 700; }
+  .side { padding: 16px 32px; }
+  .side h3 { color: #93c5fd; margin-bottom: 8px; }
+  .row { display: flex; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,.06); border-radius: 8px; margin-bottom: 6px; font-size: 1.1rem; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🏥 Puskesmas Sukamaju — Antrian Loket</h1>
+    <div id="clock">--:--</div>
+  </header>
+  <div class="now">
+    <div class="label">NOMOR DIPANGGIL</div>
+    <div id="number">—</div>
+    <div id="loket"></div>
+  </div>
+  <div class="side">
+    <h3>Dipanggil Sebelumnya</h3>
+    <div id="history"></div>
+  </div>
+<script>
+function render(s) {
+  document.getElementById("number").textContent = s.current ? s.current.nomor : "—";
+  document.getElementById("loket").textContent = s.current ? `→ LOKET ${s.current.loket}` : "";
+  document.getElementById("history").innerHTML = s.history.slice(1, 7)
+    .map((h) => `<div class="row"><span>${h.nomor}</span><span>Loket ${h.loket}</span></div>`).join("");
+}
+setInterval(() => {
+  document.getElementById("clock").textContent = new Date().toLocaleTimeString("id-ID");
+}, 1000);
+const es = new EventSource("/events");
+es.addEventListener("snapshot", (e) => render(JSON.parse(e.data)));
+es.addEventListener("update", (e) => render(JSON.parse(e.data)));
+</script>
+</body>
+</html>

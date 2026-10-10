@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Antrian</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: system-ui, sans-serif; background: #eff6ff; color: #1e3a8a; }
+  main { max-width: 560px; margin: 40px auto; padding: 0 16px; }
+  .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .big { font-size: 3rem; font-weight: 800; text-align: center; color: #1d4ed8; }
+  button { width: 100%; padding: 16px; border: 0; border-radius: 12px; background: #2563eb; color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer; margin-top: 8px; }
+  button.ghost { background: #dbeafe; color: #1e40af; }
+  .loket { display: flex; gap: 8px; margin-top: 8px; }
+  .loket button { flex: 1; margin: 0; padding: 12px; font-size: 1rem; }
+  li { padding: 6px 0; border-bottom: 1px solid #dbeafe; list-style: none; }
+  #waiting { font-size: 1.4rem; text-align: center; margin: 8px 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Sedang Dilayani</h2>
+    <div class="big" id="current">—</div>
+    <p style="text-align:center" id="loket-label">menunggu pemanggilan</p>
+    <div class="loket">
+      <button onclick="panggil(1)">Panggil Loket 1</button>
+      <button onclick="panggil(2)">Loket 2</button>
+      <button onclick="panggil(3)">Loket 3</button>
+    </div>
+  </div>
+  <div class="card">
+    <div id="waiting">0 menunggu</div>
+    <button onclick="ambil()">🎟️ Ambil Nomor Baru</button>
+    <button class="ghost" onclick="reset()">Reset Antrian</button>
+  </div>
+  <div class="card">
+    <h3>Riwayat Panggilan</h3>
+    <ul id="history"></ul>
+  </div>
+</main>
+<script>
+function render(s) {
+  document.getElementById("current").textContent = s.current ? s.current.nomor : "—";
+  document.getElementById("loket-label").textContent = s.current ? `Loket ${s.current.loket}` : "menunggu pemanggilan";
+  document.getElementById("waiting").textContent = `${s.waiting.length} menunggu`;
+  document.getElementById("history").innerHTML = s.history
+    .map((h) => `<li>${h.nomor} → Loket ${h.loket} <small>${h.at.slice(11, 16)}</small></li>`).join("");
+}
+const es = new EventSource("/events");
+es.addEventListener("snapshot", (e) => render(JSON.parse(e.data)));
+es.addEventListener("update", (e) => render(JSON.parse(e.data)));
+
+async function panggil(loket) {
+  await fetch("/panggil", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ loket }) });
+}
+async function ambil() { await fetch("/ambil", { method: "POST" }); }
+async function reset() { if (confirm("Reset seluruh antrian?")) await fetch("/reset", { method: "POST" }); }
+</script>
+</body>
+</html>
